@@ -24,7 +24,14 @@ type N1qlPerson struct {
 var bucket *gocb.Bucket
 
 func GetPersonEndpoint(w http.ResponseWriter, req *http.Request) {
-
+	var n1qlParams []interface{}
+	query := gocb.NewN1qlQuery("SELECT * FROM `resful-sample` AS person WHERE META(person).id = $1")
+	params := mux.Vars(req)
+	n1qlParams = append(n1qlParams, params["id"])
+	rows, _ := bucket.ExecuteN1qlQuery(query, n1qlParams)
+	var row N1qlPerson
+	rows.One(&row)
+	json.NewEncoder(w).Encode(row.Person)
 }
 
 func GetPeopleEndpoint(w http.ResponseWriter, req *http.Request) {
