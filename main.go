@@ -17,6 +17,10 @@ type Person struct {
 	Email     string `json:"email,omitempty"`
 }
 
+type N1qlPerson struct {
+	Person Person `json:"person"`
+}
+
 var bucket *gocb.Bucket
 
 func GetPersonEndpoint(w http.ResponseWriter, req *http.Request) {
@@ -24,7 +28,14 @@ func GetPersonEndpoint(w http.ResponseWriter, req *http.Request) {
 }
 
 func GetPeopleEndpoint(w http.ResponseWriter, req *http.Request) {
-
+	var person []Person
+	query := gocb.NewN1qlQuery("SELECT * FROM `resful-sample` AS person")
+	rows, _ := bucket.ExecuteN1qlQuery(query, nil)
+	var row N1qlPerson
+	for rows.Next(&row) {
+		person = append(person, row.Person)
+	}
+	json.NewEncoder(w).Encode(person)
 }
 
 func CreatePersonEndpoint(w http.ResponseWriter, req *http.Request) {
