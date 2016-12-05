@@ -64,7 +64,22 @@ func CreatePersonEndpoint(w http.ResponseWriter, req *http.Request) {
 }
 
 func UpdatePersonEndpoint(w http.ResponseWriter, req *http.Request) {
-
+	var person Person
+	var n1qlParams []interface{}
+	_ = json.NewDecoder(req.Body).Decode(&person)
+	query := gocb.NewN1qlQuery("UPDATE `resful-sample` USE KEYS $1 SET firstname = $2, lastname = $3, email = $4")
+	params := mux.Vars(req)
+	n1qlParams = append(n1qlParams, params["id"])
+	n1qlParams = append(n1qlParams, person.Firstname)
+	n1qlParams = append(n1qlParams, person.Lastname)
+	n1qlParams = append(n1qlParams, person.Email)
+	_, err := bucket.ExecuteN1qlQuery(query, n1qlParams)
+	if err != nil {
+		w.WriteHeader(401)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	json.NewEncoder(w).Encode(person)
 }
 
 func DeletePersonEndpoint(w http.ResponseWriter, req *http.Request) {
