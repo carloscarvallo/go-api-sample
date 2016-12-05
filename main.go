@@ -83,7 +83,17 @@ func UpdatePersonEndpoint(w http.ResponseWriter, req *http.Request) {
 }
 
 func DeletePersonEndpoint(w http.ResponseWriter, req *http.Request) {
-
+	var n1qlParams []interface{}
+	query := gocb.NewN1qlQuery("DELETE FROM `resful-sample` AS person WHERE META(person).id = $1")
+	params := mux.Vars(req)
+	n1qlParams = append(n1qlParams, params["id"])
+	_, err := bucket.ExecuteN1qlQuery(query, n1qlParams)
+	if err != nil {
+		w.WriteHeader(401)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	json.NewEncoder(w).Encode(&Person{})
 }
 
 func main() {
